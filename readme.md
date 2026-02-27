@@ -49,7 +49,7 @@ Stdio functions implement strlen via null terminated loop, memset and memcpy thr
 - Targets 32 bit mode exclusively without Thumb instruction set
 - Vprintf presumes proper stack alignment for argument access
 
-## Further Improvments  
+## Further Improvements  
 
 - Add new syscalls by defining SYSCALL name in `syscalls.S`.
 - Implement working free by maintaining chunk metadata in `malloc.c`.
