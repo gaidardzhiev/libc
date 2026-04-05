@@ -27,6 +27,20 @@ SYSCALL getpid, 20
 SYSCALL lseek, 19
 SYSCALL brk, 45
 SYSCALL sys_exit, 1
+SYSCALL munmap, 91
+.global mmap
+mmap:
+mov r7, #192
+svc #0
+cmn r0, #4096
+bhi 1f
+bx lr
+1:
+rsbs r0, r0, #0
+ldr r1, =errno
+str r0, [r1]
+mov r0, #-1
+bx lr
 .global sbrk
 sbrk:
 ldr r1, =__brk_current
