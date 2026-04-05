@@ -82,18 +82,22 @@ int vprintf(const char *fmt, void *ap) {
 					*p = 0;
 					int neg = 0;
 					unsigned uval;
-					if (val < 0) { neg = 1; uval = -val; }
-					else uval = val;
-					do {
-						unsigned temp = (uval * 0x199A) >> 11;
-						*--p = '0' + (uval - temp * 10);
-						uval = temp;
-					} while (uval >= 10);
+					if (val < 0) { neg = 1; uval = (unsigned)-(val + 1) + 1u; }
+					else uval = (unsigned)val;
+					if (uval == 0) {
+						*--p = '0';
+					} else {
+						do {
+							unsigned temp = (uval * 0x199A) >> 11;
+							*--p = '0' + (char)(uval - temp * 10);
+							uval = temp;
+						} while (uval >= 10);
+						if (uval) *--p = '0' + (char)uval;
+					}
 					if (neg) *--p = '-';
-					if (val == 0) *--p = '0';
 					while (*p) putchar(*p++);
 					break;
-					  }
+				}
 				case '%': putchar('%'); break;
 		}
 	}

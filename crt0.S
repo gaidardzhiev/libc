@@ -10,6 +10,11 @@ ldr r3, =errno
 mov r4, #0
 str r4, [r3]
 mov r0, #0
+mov r7, #45
+svc #0
+ldr r3, =__brk_current
+str r0, [r3]
+mov r0, #0
 mov r1, #0
 mov r2, #0
 bl main
