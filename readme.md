@@ -62,4 +62,4 @@ Stdio functions implement strlen via null terminated loop, memset and memcpy thr
 
 ## License
 
-This project is provided under the [GPL3 License](COPYING)
+This project is provided under the [GPL3 License](COPYING) Copyright (C) 2026 Ivan Gaydardzhiev
