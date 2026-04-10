@@ -4,7 +4,7 @@ This is an educational libc implementation targeting ARMv8 32bit, specifically A
 
 ## Project Features
 
-The implementation includes a fully functional printf supporting `%s`, `%c`, `%p`, `%d`, and `%%` formats through a hand rolled vprintf parser. Malloc uses an implicit free list (first fit) with 16 byte block headers, block splitting on allocation, and forward coalescing on free. Allocations of 128KB or larger bypass the sbrk heap entirely and are satisfied via `mmap(MAP_ANONYMOUS)`, with `munmap` called on `free` to return pages directly to the OS. Syscalls handle errors by setting a global errno variable and returning -1. CRT0 startup code zeroes errno, initialises the heap base via `brk(0)`, invokes `main()`, and executes `sys_exit` upon return. A custom linker script positions code at address `0x8000` with sections laid out contiguously.
+The implementation includes a fully functional printf supporting `%s`, `%c`, `%p`, `%d`, and `%%` formats through a hand rolled vprintf parser. Malloc uses an implicit free list (first fit) with 16 byte block headers, block splitting on allocation, and forward coalescing on free. Allocations of 128KB or larger bypass the sbrk heap entirely and are satisfied via `mmap(MAP_ANONYMOUS)`, with `munmap` called on `free` to return pages directly to the OS. Syscalls handle errors by setting a global errno variable and returning -1. CRT0 startup code zeroes errno, initialises the heap base via `brk(0)`, invokes `main()`, and executes `sys_exit` upon return. A custom linker script positions code at address `0x8000` with sections laid out contiguously. Stdout is line buffered with a 64 byte buffer, reducing syscall overhead from one call per character to one call per line.
 
 ## Building and Testing
 
@@ -21,10 +21,10 @@ Target platform specifies ARMv8 AArch32 execution mode with hard float calling c
 
 ```
 .
-|- crt0.S          (startup: errno init, brk(0) heap init, main() call, sys_exit)
+|- crt0.S          (startup: errno init, brk(0) heap init, main() call, fflush, sys_exit)
 |- syscalls.S      (write/read/open/close/sbrk/mmap/munmap and errno)
 |- malloc.c        (free list allocator, 16 byte headers, mmap for large allocs)
-|- stdio.c         (printf/puts/strlen/mem* with vprintf)
+|- stdio.c         (printf/puts/strlen/mem* with vprintf and 64 byte stdout buffer)
 |- include/        (headers: stdio/malloc/unistd/stddef/stdint)
 |- linker.ld       (sections layout)
 |- Makefile        (compilation instructions)
@@ -40,7 +40,11 @@ Syscalls employ a macro system generating stubs that load syscall number into `r
 
 Malloc maintains an implicit singly linked free list of 16 byte headers. Each header stores the usable block size, a flags word (bit 0 `IS_FREE`, bit 1 `IS_MMAP`), and a next pointer, with 4 bytes of padding to keep the header exactly 16 bytes and the user data 16 byte aligned. Allocations of 128KB or more bypass the list and call `mmap(MAP_ANONYMOUS)` directly, tagging the header `IS_MMAP`. Smaller allocations do a first fit walk of the free list; if no block fits, `sbrk` extends the heap. On a hit the block is split when the unused tail is large enough to hold a header plus at least 16 usable bytes, avoiding the creation of uselessly small fragments. `free` checks `IS_MMAP` and calls `munmap` for large blocks; for sbrk blocks it sets `IS_FREE` and attempts forward coalescing, if the immediately following block is also free and physically adjacent the two are merged into one, keeping fragmentation in check without requiring a doubly linked list.
 
-Stdio functions implement strlen via null terminated loop, memset and memcpy through byte wise iteration, puts via single character writes followed by newline, and putchar as single byte write to stdout. Vprintf parses format string manually, handling non percent characters directly, then switches on specifier: strings dereference and output until null, characters output directly, pointers print `0x` prefix followed by lowercase hex digits using lookup table, decimals handle zero explicitly then convert via fixed point multiplication by `0x199A` shifted right 11 bits approximating division by 10 without hardware divide, with correct negative sign and `INT_MIN` handling. Printf passes arguments via raw stack pointer arithmetic after the format argument.
+Stdio functions implement strlen via null terminated loop, memset and memcpy through byte wise iteration, puts and putchar through a 64 byte line buffer flushed on newline or when full. Vprintf parses format string manually, handling non percent characters directly, then switches on specifier: strings dereference and output until null, characters output directly, pointers print `0x` prefix followed by lowercase hex digits using lookup table, decimals handle zero explicitly then convert via fixed point multiplication by `0x199A` shifted right 11 bits approximating division by 10 without hardware divide, with correct negative sign and `INT_MIN` handling. Printf passes arguments via raw stack pointer arithmetic after the format argument, and calls `fflush` before returning.
+
+## Buffered Stdout
+
+Previously every character written to stdout made an individual `write` syscall, producing over 200 kernel transitions for a typical hello world run. The replacement is a 64 byte line buffer in `.data` shared across `putchar`, `puts`, and `printf`. Characters accumulate in `stdout_buf` until either a newline is encountered or the buffer reaches capacity, at which point a single `write(1, stdout_buf, stdout_pos)` drains it. `printf` additionally calls `fflush` before returning so output without a trailing newline is not silently held. `crt0.S` calls `fflush` before the final `sys_exit` syscall as a safety net, ensuring any partial buffer remaining after `main` returns is always drained. The result confirmed by strace is 7 `write` calls for the same output that previously required 200+, with the largest single call carrying 41 bytes.
 
 ## Limitations
 
@@ -55,7 +59,7 @@ Stdio functions implement strlen via null terminated loop, memset and memcpy thr
 - Add a BSS clear loop in `crt0.S` iterating from `_bss_start` to `_end` for strict C compliance.
 - Populate `argc`/`argv`/`envp` in `_start`, the kernel pushes them onto the stack before jumping to the entry point.
 - Replace raw stack walking in `vprintf` with `__builtin_va_list` / `__builtin_va_arg` for correctness across compiler versions.
-- Add buffered stdout (64 byte buffer, flush on newline or full) to replace the current one syscall per character `puts`.
+- ~~Add buffered stdout (64 byte buffer, flush on newline or full) to replace the current one syscall per character `puts`.~~
 - Enhance printf by extending vprintf switch for `%u`, `%x`, `%f`, and `%e` formats.
 - Upgrade the free list to doubly linked to enable backward coalescing and reduce fragmentation further.
 - Add new syscalls by defining `SYSCALL name, nr` in `syscalls.S`.

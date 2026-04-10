@@ -25,16 +25,29 @@ void *memcpy(void *dest, const void *src, size_t n) {
 	return dest;
 }
 
-int puts(const char *s) {
-	while (*s) write(1, s++, 1);
-	return write(1, "\n", 1);
+char stdout_buf[BUFSIZ] __attribute__((section(".data")));
+
+unsigned stdout_pos __attribute__((section(".data")));
+
+void fflush(void) {
+	if (stdout_pos > 0) {
+		write(1, stdout_buf, stdout_pos);
+		stdout_pos = 0;
+	}
 }
 
 int putchar(int c) {
-	return write(1, &c, 1);
+	stdout_buf[stdout_pos++] = (char)c;
+	if (stdout_pos == BUFSIZ || c == '\n')
+		fflush();
+	return (unsigned char)c;
 }
 
-void fflush(void) {}
+int puts(const char *s) {
+	while (*s) putchar((unsigned char)*s++);
+	putchar('\n');
+	return 0;
+}
 
 int vprintf(const char *fmt, void *ap) {
 	char *args = ap;
@@ -105,5 +118,7 @@ int vprintf(const char *fmt, void *ap) {
 }
 
 int printf(const char *fmt, ...) {
-	return vprintf(fmt, ((void*)&fmt) + 4);
+	int r = vprintf(fmt, ((void*)&fmt) + 4);
+	fflush();
+	return r;
 }

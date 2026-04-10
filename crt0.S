@@ -18,6 +18,7 @@ mov r0, #0
 mov r1, #0
 mov r2, #0
 bl main
+bl fflush
 mov r7, #1
 svc #0
 b .

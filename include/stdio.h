@@ -22,7 +22,7 @@ int putchar(int c);
 int printf(const char *fmt, ...);
 int vprintf(const char *fmt, void *ap);
 #define BUFSIZ 64
-static char stdout_buf[BUFSIZ] __attribute__((section(".data")));
-static unsigned stdout_pos __attribute__((section(".data")));
+extern char stdout_buf[BUFSIZ];
+extern unsigned stdout_pos;
 void fflush(void);
 #endif
