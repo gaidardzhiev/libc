@@ -12,6 +12,7 @@ The implementation includes a fully functional printf supporting `%s`, `%c`, `%p
 - Run `make run` to execute it and display the exit code.
 - Use `make diag` for detailed diagnostics including file listing with sizes, filetype identification, binary size analysis, execution, and exit code verification.
 - The test program `test/hello.c` exercises printf, sbrk allocation, free and block reuse, forward coalescing, and the mmap large allocation path. Expected output confirms each step with an `OK` status.
+- To install the library to `/opt/svclibc` and the `svclibc-gcc` wrapper to `/usr/local/bin` run `make install`. After installation you can compile against it with a single command: `svclibc-gcc prog.c -o prog`. To remove everything installed by `make install` run `make uninstall`.
 
 ## System Architecture
 
