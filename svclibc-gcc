@@ -1,10 +1,13 @@
 #!/bin/sh
 exec "${REALGCC:-gcc}" \
-    -marm -mfloat-abi=hard \
-    -nostdlib -ffreestanding -fno-builtin \
-    -fno-stack-protector -fno-unwind-tables \
-    -static -Os \
-    -I /opt/svclibc/include \
-    -T /opt/svclibc/lib/svclibc.ld \
-    "$@" \
-    /opt/svclibc/lib/svclibc.a
+	-marm \
+	-mfloat-abi=hard \
+	-nostdlib \
+	-ffreestanding \
+	-fno-builtin \
+	-fno-stack-protector \
+	-fno-unwind-tables \
+	-static -Os \
+	-I /opt/svclibc/include \
+	-T /opt/svclibc/lib/svclibc.ld \
+	"$@" /opt/svclibc/lib/svclibc.a
