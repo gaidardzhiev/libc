@@ -40,7 +40,7 @@ Syscalls employ a macro system generating stubs that load syscall number into `r
 
 Malloc maintains an implicit singly linked free list of 16 byte headers. Each header stores the usable block size, a flags word (bit 0 `IS_FREE`, bit 1 `IS_MMAP`), and a next pointer, with 4 bytes of padding to keep the header exactly 16 bytes and the user data 16 byte aligned. Allocations of 128KB or more bypass the list and call `mmap(MAP_ANONYMOUS)` directly, tagging the header `IS_MMAP`. Smaller allocations do a first fit walk of the free list; if no block fits, `sbrk` extends the heap. On a hit the block is split when the unused tail is large enough to hold a header plus at least 16 usable bytes, avoiding the creation of uselessly small fragments. `free` checks `IS_MMAP` and calls `munmap` for large blocks; for sbrk blocks it sets `IS_FREE` and attempts forward coalescing, if the immediately following block is also free and physically adjacent the two are merged into one, keeping fragmentation in check without requiring a doubly linked list.
 
-Stdio functions implement strlen via null terminated loop, memset and memcpy through byte wise iteration, puts and putchar through a 64 byte line buffer flushed on newline or when full. Vprintf parses format string manually, handling non percent characters directly, then switches on specifier: strings dereference and output until null, characters output directly, pointers print `0x` prefix followed by lowercase hex digits using lookup table, decimals handle zero explicitly then convert via fixed point multiplication by `0x199A` shifted right 11 bits approximating division by 10 without hardware divide, with correct negative sign and `INT_MIN` handling. Printf passes arguments via raw stack pointer arithmetic after the format argument, and calls `fflush` before returning.
+Stdio functions implement strlen via null terminated loop, memset and memcpy through byte wise iteration, puts and putchar through a 64 byte line buffer flushed on newline or when full. Vprintf receives a `__builtin_va_list` and fetches each argument with `__builtin_va_arg`, letting the compiler emit ABI correct argument access for ARM 32 hard float without any manual pointer arithmetic. It parses the format string manually, handling non percent characters directly, then switches on specifier: strings dereference and output until null, characters output directly, pointers print `0x` prefix followed by lowercase hex digits using lookup table, decimals handle zero explicitly then convert via fixed point multiplication by `0x199A` shifted right 11 bits approximating division by 10 without hardware divide, with correct negative sign and `INT_MIN` handling. Printf uses `__builtin_va_start` and `__builtin_va_end` around the vprintf call and calls `fflush` before returning.
 
 ## Buffered Stdout
 
@@ -52,13 +52,12 @@ Previously every character written to stdout made an individual `write` syscall,
 - File operations limited to raw read and write syscalls without stdio layering
 - Malloc free list is singly linked so coalescing is forward only; pathological free patterns can leave non adjacent free blocks that won't merge
 - Targets 32 bit ARM mode exclusively without Thumb instruction set support
-- Vprintf walks the stack by raw pointer arithmetic, fragile outside the current ABI and flags
 
 ## Further Improvements
 
 - Add a BSS clear loop in `crt0.S` iterating from `_bss_start` to `_end` for strict C compliance.
 - Populate `argc`/`argv`/`envp` in `_start`, the kernel pushes them onto the stack before jumping to the entry point.
-- Replace raw stack walking in `vprintf` with `__builtin_va_list` / `__builtin_va_arg` for correctness across compiler versions.
+- ~~Replace raw stack walking in `vprintf` with `__builtin_va_list` / `__builtin_va_arg` for correctness across compiler versions.~~
 - ~~Add buffered stdout (64 byte buffer, flush on newline or full) to replace the current one syscall per character `puts`.~~
 - Enhance printf by extending vprintf switch for `%u`, `%x`, `%f`, and `%e` formats.
 - Upgrade the free list to doubly linked to enable backward coalescing and reduce fragmentation further.

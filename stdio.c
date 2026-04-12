@@ -49,10 +49,8 @@ int puts(const char *s) {
 	return 0;
 }
 
-int vprintf(const char *fmt, void *ap) {
-	char *args = ap;
+int vprintf(const char *fmt, __builtin_va_list ap) {
 	char num[12];
-	int i;
 	while (*fmt) {
 		if (*fmt != '%') {
 			putchar(*fmt++);
@@ -60,65 +58,68 @@ int vprintf(const char *fmt, void *ap) {
 		}
 		fmt++;
 		if (*fmt == 0)
-		break;
+			break;
 		switch (*fmt++) {
-				case 's': {
-					char *s = *(char**)args; args += 4;
-					while (*s) putchar(*s++);
+			case 's': {
+				char *s = __builtin_va_arg(ap, char *);
+				while (*s) putchar(*s++);
+				break;
+			}
+			case 'c': {
+				int c = __builtin_va_arg(ap, int);
+				putchar(c);
+				break;
+			}
+			case 'p': {
+				unsigned val = (unsigned)__builtin_va_arg(ap, void *);
+				putchar('0'); putchar('x');
+				static const char hex[] = "0123456789abcdef";
+				if (val == 0) {
+					putchar('0');
 					break;
 				}
-				case 'c': {
-					int c = *(int*)args; args += 4;
-					putchar(c);
-					break;
+				char *p = num + 11;
+				*p = 0;
+				while (val) {
+					*--p = hex[val & 15];
+					val >>= 4;
 				}
-				case 'p': {
-					unsigned val = (unsigned)*(void**)args; args += 4;
-					putchar('0'); putchar('x');
-					static const char hex[] = "0123456789abcdef";
-					if (val == 0) {
-						putchar('0');
-						break; 
-					}
-					char *p = num + 11;
-					*p = 0;
-					while (val) {
-						*--p = hex[val & 15];
-						val >>= 4;
-					}
-					while (*p) putchar(*p++);
-					break;
+				while (*p) putchar(*p++);
+				break;
+			}
+			case 'd': {
+				int val = __builtin_va_arg(ap, int);
+				char *p = num + 11;
+				*p = 0;
+				int neg = 0;
+				unsigned uval;
+				if (val < 0) { neg = 1; uval = (unsigned)-(val + 1) + 1u; }
+				else uval = (unsigned)val;
+				if (uval == 0) {
+					*--p = '0';
+				} else {
+					do {
+						unsigned temp = (uval * 0x199A) >> 11;
+						*--p = '0' + (char)(uval - temp * 10);
+						uval = temp;
+					} while (uval >= 10);
+					if (uval) *--p = '0' + (char)uval;
 				}
-				case 'd': {
-					int val = *(int*)args; args += 4;
-					char *p = num + 11;
-					*p = 0;
-					int neg = 0;
-					unsigned uval;
-					if (val < 0) { neg = 1; uval = (unsigned)-(val + 1) + 1u; }
-					else uval = (unsigned)val;
-					if (uval == 0) {
-						*--p = '0';
-					} else {
-						do {
-							unsigned temp = (uval * 0x199A) >> 11;
-							*--p = '0' + (char)(uval - temp * 10);
-							uval = temp;
-						} while (uval >= 10);
-						if (uval) *--p = '0' + (char)uval;
-					}
-					if (neg) *--p = '-';
-					while (*p) putchar(*p++);
-					break;
-				}
-				case '%': putchar('%'); break;
+				if (neg) *--p = '-';
+				while (*p) putchar(*p++);
+				break;
+			}
+			case '%': putchar('%'); break;
 		}
 	}
 	return 0;
 }
 
 int printf(const char *fmt, ...) {
-	int r = vprintf(fmt, ((void*)&fmt) + 4);
+	__builtin_va_list ap;
+	__builtin_va_start(ap, fmt);
+	int r = vprintf(fmt, ap);
+	__builtin_va_end(ap);
 	fflush();
 	return r;
 }

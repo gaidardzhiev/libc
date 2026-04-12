@@ -20,7 +20,7 @@ int memcmp(const void *s1, const void *s2, size_t n);
 int puts(const char *s);
 int putchar(int c);
 int printf(const char *fmt, ...);
-int vprintf(const char *fmt, void *ap);
+int vprintf(const char *fmt, __builtin_va_list ap);
 #define BUFSIZ 64
 extern char stdout_buf[BUFSIZ];
 extern unsigned stdout_pos;
