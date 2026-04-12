@@ -3,8 +3,8 @@
  * Licensed under the GPL-3.0-only
  */
 
-#ifndef _MYLIB_UNISTD_H
-#define _MYLIB_UNISTD_H
+#ifndef _SVCLIBC_UNISTD_H
+#define _SVCLIBC_UNISTD_H
 #include "stddef.h"
 #include "stdint.h"
 extern int sys_exit(int status);

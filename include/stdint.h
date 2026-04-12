@@ -3,8 +3,8 @@
  * Licensed under the GPL-3.0-only
  */
 
-#ifndef _MYLIB_STDINT_H
-#define _MYLIB_STDINT_H
+#ifndef _SVCLIBC_STDINT_H
+#define _SVCLIBC_STDINT_H
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;

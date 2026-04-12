@@ -8,11 +8,19 @@ CRT0=crt0.o
 SYSCALLS=syscalls.o
 MALLOC=malloc.o
 STDIO=stdio.o
+OBJS=$(CRT0) $(SYSCALLS) $(MALLOC) $(STDIO)
+ARCHIVE=svclibc.a
+PREFIX=/opt/svclibc
+BINDIR=/usr/local/bin
+LIBDIR=$(PREFIX)/lib
+INCDIR=$(PREFIX)/include
+SPECS=$(LIBDIR)/svclibc-gcc.specs
+WRAPPER=$(BINDIR)/svclibc-gcc
 
 all: hello
 
-hello: test/hello.c $(CRT0) $(SYSCALLS) $(MALLOC) $(STDIO)
-	$(CC) $(CFLAGS) test/hello.c $(CRT0) $(SYSCALLS) $(MALLOC) $(STDIO) $(LDFLAGS) -o $@
+hello: test/hello.c $(OBJS)
+	$(CC) $(CFLAGS) test/hello.c $(OBJS) $(LDFLAGS) -o $@
 
 $(CRT0): crt0.S
 	$(CC) $(CFLAGS) -c -o $(CRT0) crt0.S
@@ -25,6 +33,26 @@ $(MALLOC): malloc.c
 
 $(STDIO): stdio.c
 	$(CC) $(CFLAGS) -c -o $(STDIO) stdio.c
+
+$(ARCHIVE): $(OBJS)
+	ar rcs $(ARCHIVE) $(OBJS)
+
+install: $(ARCHIVE)
+	mkdir -p $(LIBDIR) $(INCDIR)
+	cp $(ARCHIVE) $(LIBDIR)/
+	cp $(CRT0) $(LIBDIR)/
+	cp linker.ld $(LIBDIR)/svclibc.ld
+	cp include/*.h $(INCDIR)/
+	sh gen_specs.sh $(LIBDIR) $(INCDIR) $(SPECS)
+	cp svclibc-gcc $(WRAPPER)
+	chmod +x $(WRAPPER)
+	@echo installed svclibc to $(PREFIX)
+	@echo wrapper at $(WRAPPER)
+
+uninstall:
+	rm -rf $(PREFIX)
+	rm -f $(WRAPPER)
+	@echo uninstalled svclibc
 
 run: hello
 	@./hello; echo "exit code: $$?"
@@ -41,6 +69,6 @@ diag: hello
 	./hello; echo "exit code: $$?"
 
 clean:
-	rm -f *.o hello
+	rm -f *.o hello $(ARCHIVE)
 
-.PHONY: all run check clean
+.PHONY: all run diag install uninstall clean

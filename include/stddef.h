@@ -3,8 +3,8 @@
  * Licensed under the GPL-3.0-only
  */
 
-#ifndef _MYLIB_STDDEF_H
-#define _MYLIB_STDDEF_H
+#ifndef _SVCLIBC_STDDEF_H
+#define _SVCLIBC_STDDEF_H
 typedef unsigned int size_t;
 typedef long ptrdiff_t;
 typedef int wchar_t;

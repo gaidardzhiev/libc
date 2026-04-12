@@ -3,8 +3,8 @@
  * Licensed under the GPL-3.0-only
  */
 
-#ifndef _MYLIB_STDIO_H
-#define _MYLIB_STDIO_H
+#ifndef _SVCLIBC_STDIO_H
+#define _SVCLIBC_STDIO_H
 #include "stddef.h"
 #include "stdint.h"
 #define EOF (-1)
