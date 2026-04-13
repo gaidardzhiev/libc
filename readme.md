@@ -28,6 +28,8 @@ Target platform specifies ARMv8 AArch32 execution mode with hard float calling c
 |- test/hello.c    (full feature exercise)
 |- get_syscalls.sh (extracts syscall #defines via cpp/syscall.h)
 |- objdump.sh      (disassembly helper)
+|- gen_specs.sh    (generates gcc specs file for svclibc-gcc)
+|- svclibc-gcc     (gcc wrapper with all ARM 32 bit freestanding flags)
 |- readme.md       (you're reading it)
 ```
 
