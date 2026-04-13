@@ -5,11 +5,11 @@
 
 #include "unistd.h"
 #include "malloc.h"
+#include "stdio.h"
 
 #define MMAP_THRESHOLD (128u * 1024u)
 #define HDR_SIZE 16u
 #define ALIGN(n) (((n) + 15u) & ~15u)
-
 #define IS_FREE 1u
 #define IS_MMAP 2u
 
@@ -59,6 +59,8 @@ void *malloc(size_t size) {
 	struct block *prev = NULL;
 	struct block *b = heap_head;
 	while (b) {
+		if (b->flags & IS_FREE)
+			coalesce_forward(b);
 		if ((b->flags & IS_FREE) && b->size >= size) {
 			if (b->size >= size + HDR_SIZE + 16u) {
 				struct block *rest = (struct block *)((char *)hdr_to_ptr(b) + size);
@@ -100,4 +102,35 @@ void free(void *ptr) {
 	}
 	b->flags |= IS_FREE;
 	coalesce_forward(b);
+}
+
+void *calloc(size_t nmemb, size_t size) {
+	if (nmemb && size > (size_t)-1 / nmemb)
+		return NULL;
+	size_t total = nmemb * size;
+	void *ptr = malloc(total);
+	if (ptr)
+		memset(ptr, 0, total);
+	return ptr;
+}
+
+void *realloc(void *ptr, size_t size) {
+	if (!ptr)
+		return malloc(size);
+	if (size == 0) {
+		free(ptr);
+		return NULL;
+	}
+	struct block *b = ptr_to_hdr(ptr);
+	size_t old_size = b->size;
+	size_t new_size = ALIGN(size);
+	if (new_size <= old_size && old_size - new_size < HDR_SIZE + 16u)
+		return ptr;
+	void *np = malloc(size);
+	if (!np)
+		return NULL;
+	size_t copy = old_size < new_size ? old_size : new_size;
+	memcpy(np, ptr, copy);
+	free(ptr);
+	return np;
 }

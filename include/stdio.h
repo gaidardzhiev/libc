@@ -17,10 +17,15 @@ size_t strlen(const char *s);
 void *memset(void *s, int c, size_t n);
 void *memcpy(void *dest, const void *src, size_t n);
 int memcmp(const void *s1, const void *s2, size_t n);
+void *memmove(void *dest, const void *src, size_t n);
 int puts(const char *s);
 int putchar(int c);
 int printf(const char *fmt, ...);
 int vprintf(const char *fmt, __builtin_va_list ap);
+int snprintf(char *buf, size_t size, const char *fmt, ...);
+int vsnprintf(char *buf, size_t size, const char *fmt, __builtin_va_list ap);
+int fprintf(int fd, const char *fmt, ...);
+int fputs(const char *s, int fd);
 #define BUFSIZ 64
 extern char stdout_buf[BUFSIZ];
 extern unsigned stdout_pos;
