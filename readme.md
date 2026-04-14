@@ -62,8 +62,16 @@ Printf lacks floating point support `%f`. File operations are limited to raw rea
 - ~~Fix the divide by 10 approximation in integer formatting to handle all 32 bit values correctly.~~
 - ~~Add lazy coalescing in the malloc walk to merge adjacent free blocks that were freed in sequence.~~
 - Upgrade the free list to doubly linked to enable backward coalescing and reduce fragmentation further.
-- Add new syscalls by defining `SYSCALL name, nr` in `syscalls.S`.
+- Add a generic `syscall(long nr, ...)` function in `syscalls.S` that loads up to six arguments into `r0`-`r5` and the number into `r7` before `SVC 0`, covering the full Linux ARM 32bit calling convention, and rebuild the named wrappers on top of it so any syscall is reachable from C without adding a new stub.
 - Add `%f` and `%e` float formatting to vprintf and vsnprintf.
+- Add `sprintf` as a convenience wrapper around `vsnprintf` with an unbounded destination for callers that manage their own buffers.
+- Add `getenv` backed by the `envp` pointer populated in `_start` once that work is complete.
+- Add `atoi`, `atol`, and `strtol` for string to integer conversions without depending on any external runtime.
+- Add `strcpy`, `strncpy`, `strcat`, `strncat`, `strcmp`, `strncmp`, `strchr`, `strrchr`, and `strstr` to complete the basic string library.
+- Add `abort` issuing a `SIGABRT` via the kill syscall and `assert` as a macro wrapping it for debugging freestanding programs.
+- Add `qsort` and `bsort` using an in place algorithm that makes no heap allocations.
+- Add `time` and `clock_gettime` backed by the corresponding Linux syscalls for basic timing support.
+- Add file descriptor backed stdio: `fopen`, `fclose`, `fread`, `fwrite`, `fseek`, `ftell`, and `feof` layered over the existing open/read/write/close/lseek syscalls.
 
 ## License
 
