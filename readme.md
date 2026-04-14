@@ -30,6 +30,7 @@ Target platform specifies ARMv8 AArch32 execution mode with hard float calling c
 |- objdump.sh      (disassembly helper)
 |- gen_specs.sh    (generates gcc specs file for svclibc-gcc)
 |- svclibc-gcc     (gcc wrapper with all ARM 32 bit freestanding flags)
+|- svclibc-tcc     (tcc wrapper compiles with -nostdlib and links manually via ld)
 |- readme.md       (you're reading it)
 ```
 
