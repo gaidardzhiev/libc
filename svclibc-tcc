@@ -1,0 +1,15 @@
+#!/bin/sh
+
+IN="$1"
+OUT="${3:-a.out}"
+
+tcc -nostdlib \
+    -I /opt/svclibc/include \
+    -c "$IN" -o /tmp/svclibc_tcc_tmp.o
+
+ld \
+    -T /opt/svclibc/lib/svclibc.ld \
+    /opt/svclibc/lib/crt0.o \
+    /tmp/svclibc_tcc_tmp.o \
+    /opt/svclibc/lib/svclibc.a \
+    -o "$OUT"

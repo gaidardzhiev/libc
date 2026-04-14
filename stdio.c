@@ -6,6 +6,22 @@
 #include "stdio.h"
 #include "unistd.h"
 
+void __aeabi_memset(void *dest, size_t n, int c) {
+	memset(dest, c, n);
+}
+
+void __aeabi_memcpy(void *dest, const void *src, size_t n) {
+	memcpy(dest, src, n);
+}
+
+void __aeabi_memmove(void *dest, const void *src, size_t n) {
+	memmove(dest, src, n);
+}
+
+void __aeabi_memclr(void *dest, size_t n) {
+	memset(dest, 0, n);
+}
+
 size_t strlen(const char *s) {
 	size_t n = 0;
 	while (s[n]) n++;

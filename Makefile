@@ -15,7 +15,8 @@ BINDIR=/usr/local/bin
 LIBDIR=$(PREFIX)/lib
 INCDIR=$(PREFIX)/include
 SPECS=$(LIBDIR)/svclibc-gcc.specs
-WRAPPER=$(BINDIR)/svclibc-gcc
+GCCWRAPPER=$(BINDIR)/svclibc-gcc
+TCCWRAPPER=$(BINDIR)/svclibc-tcc
 
 all: hello
 
@@ -44,14 +45,18 @@ install: $(ARCHIVE)
 	cp linker.ld $(LIBDIR)/svclibc.ld
 	cp include/*.h $(INCDIR)/
 	sh gen_specs.sh $(LIBDIR) $(INCDIR) $(SPECS)
-	cp svclibc-gcc $(WRAPPER)
-	chmod +x $(WRAPPER)
+	cp svclibc-gcc $(GCCWRAPPER)
+	chmod +x $(GCCWRAPPER)
+	cp svclibc-tcc $(TCCWRAPPER)
+	chmod +x $(TCCWRAPPER)
 	@echo installed svclibc to $(PREFIX)
-	@echo wrapper at $(WRAPPER)
+	@echo gcc wrapper at $(GCCWRAPPER)
+	@echo tcc wrapper at $(TCCWRAPPER)
 
 uninstall:
 	rm -rf $(PREFIX)
-	rm -f $(WRAPPER)
+	rm -f $(GCCWRAPPER)
+	rm -f $(TCCWRAPPER)
 	@echo uninstalled svclibc
 
 run: hello
