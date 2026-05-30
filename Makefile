@@ -73,7 +73,11 @@ diag: hello
 	printf "\n\n"
 	./hello; echo "exit code: $$?"
 
+bf: test/bf.c $(OBJS)
+	$(CC) $(CFLAGS) test/bf.c $(OBJS) $(LDFLAGS) -o $@
+	@echo '++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.' | ./bf
+
 clean:
-	rm -f *.o hello $(ARCHIVE)
+	rm -f *.o hello bf $(ARCHIVE)
 
 .PHONY: all run diag install uninstall clean
